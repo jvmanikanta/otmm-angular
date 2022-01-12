@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {HttpClient, HttpHeaders } from '@angular/common/http';
+import { ClipboardService } from 'ngx-clipboard';
 
 @Component({
   selector: 'app-root',
@@ -8,26 +9,245 @@ import {HttpClient, HttpHeaders } from '@angular/common/http';
 })
 export class AppComponent {
   title = 'angular-otmm';
+  assets: any;
+  assetsList: any;
+  otdsTicketObj: any;
+  otdsTokenObj:any;
+  sessionObj:any;
+  ticket:string = '';
+  token:string='';
+  isFolderClicked: boolean = true;
+  isAssetClicked: boolean = false;
+  sessionId: string = '';
+  uploadedFile: any;
+  filename: string = '';
+  filetype: string = '';
 
+  ngOnInit(){
+    const url = "/otmmapi/v6/sessions";
+    const otdsTicketBody = {
+      "userName": "manikanta",
+      "password": "TrainingP@ss123",
+      "ticketType": "OTDSTICKET"
+    }
+    this.httpClient.post("http://training-otmm.acheron-tech.com:8080/otdsws/rest/authentication/credentials",otdsTicketBody)
+    .subscribe((data) => {
+      this.otdsTicketObj = data;
+      this.ticket = this.otdsTicketObj.ticket;
+      const otdsTokenBody = {
+        "ticket": this.ticket,
+        "targetResourceId": "e1332625-4b8e-4e40-94a8-012f81846665"
+      }
+      this.httpClient.post("http://training-otmm.acheron-tech.com:8080/otdsws/rest/authentication/resource/ticketforresource",otdsTokenBody)
+      .subscribe((data)=>{
+        this.otdsTokenObj = data;
+        this.token = this.otdsTokenObj.ticket;
+        const headers = new HttpHeaders()
+        .set("OTDSToken",this.token)
+        this.httpClient.get(url,{headers: headers}).subscribe((data)=>{
+          const url = "/otmmapi/v6/sessions"
+          const headers = new HttpHeaders()
+        .set("OTDSToken",this.token)
+        this.httpClient.get(url,{headers: headers}).subscribe((data)=>{
+          this.sessionObj = data;
+          this.sessionId = this.sessionObj.session_resource.session.id;
+          console.log(this.sessionId);
+        })
+        });
+          })
+    });
 
-  constructor(private httpClient: HttpClient){}
+    
+  }
+
+  constructor(private httpClient: HttpClient, private clipboardService:ClipboardService){}
   OnSearch = () => {
     let keywordEl = <HTMLInputElement>document.getElementById("keyword");
     let keyword = keywordEl.value;
     let scopeIdEl = <HTMLInputElement>document.getElementById("scope_id");
     let scopeId = scopeIdEl.value;
-    console.log(keyword);
-    console.log(scopeId);
     const headers = new HttpHeaders()
-      .set("X-Requested-By", "740370477")
-      .set("OTDSToken", "*VER2*ABQZapqaQ60kTpcggKMDGUt5GdYkZAAQLcSchrI8wN7_s_1psWDy4QMwqD9KK3KNZvWwFR6OO3cZB4m2TQocOkNh_VKzsslWGq26s3r82odMHrmOqRzLV58SyC03u1nBFgiCEoWKM2Sf7zQL4C70NofGB08Ekxw5LzH21O9D1yFzsZSGVohFC4na0A8xNoC6SujXKaTxl4wsfHRz4E7hEaDOOLs8Zdq2I7xGDXKrmV3D7ma5XJqDUTRg1ZWFSB93m8lex4L6aaC2k7mnOQDHynuEv7d9Qh0K1OIgIIwwwkqW8Oq1qlMqlgNP38Tw9wcfeE9c6Hm4FEmOyX8cuGVsV1Hfhvhm4RGxPOQnxVlyg2fke1bDukAHE2jWL0xwPoD63khVEmDxnv0D_52yIp8b11fm-5cMOEwcf_z5VBQ7yRpCYxruhed7j-s5q7RIO_onax1G-KkiWsVNX7eBe0p9i4ozpTMzB4rqDflRhgAOJxJBC1fVgF0g8l4D3hPqrRDPrJ0Zjy1wxzMUbvRZQ-C1gk7A_0UQHPAjH5ouHe-rihc9QTUX6z7kPbUdfgNBFXTFBQCkZeJFIXdsnEClkPcMDdzuTPESXBm5CejsW_YX7Yz-A5nS203iStecEA6_I1r4prJGq4K4sWtDuf1BvE9X2LK2izFPhc0odpWSdkJwuK6-nuLjgblfBDiLz577uQ4jzfx9QJDxzMWZ9XGsjum5o8Q1EhtN9aOZr8dXnLkOJeJdxehMtC2QstEQ9wVEsvMyq-UcUFsfYqV5b3DekBMMRlimLdDY9X6cCEpgv5rdnA0PSX_svQVG-vU3rBb2zoet8V1BlI852_0XSSJizYCDZ5EJ4Otw6jSn6Tbq-9zIl5I8EmkH5yr90jPenEfQ4J8ivoM6k_581aLZWZywuoGrQb3CswPdVX_2MvDG3IW5COWItcPtU6S9Rr9qnu5mdqh2iPEVG0S5DfAzbPnQIxiogEDfzkIqeTa4N1Xrtchpay0IIlFbilRauUxPaXw3yPS4HgDHBsACotw9aY2Zbuy2c0MwqXb9n1IyeBqIf7ZSZkwSKmTDhIM_MWHzaO2sAMUGbjv80s-WGvc9yZ2KrlEu3RrOySuFEdMqvPY-deRNez9d2mKys8H9sW4z")
 
-    const url = "/api/otmmapi/v6/search/text?keyword_query=" + keyword +"&keyword_scope_id=" + scopeId;
+    const url = "/otmmapi/v6/search/text?keyword_query=" + keyword +"&keyword_scope_id=" + scopeId;
     this.httpClient.get(url, {headers: headers}).subscribe(
       (data) => {
-        console.log(data);
-      }
+        this.assets = data;
+        this.assetsList = this.assets['search_result_resource']['asset_list'];
+        console.log(this.assetsList);
+      } 
       );
   }
 
+  folder = () => {
+    if(this.isFolderClicked == false){
+      this.isAssetClicked = false;
+      this.isFolderClicked = true;
+    }
+  }
+
+  asset = () => {
+    if(this.isAssetClicked == false){
+      this.isFolderClicked = false;
+      this.isAssetClicked = true;
+    }
+  }
+
+  createFolder = () => {
+    let nameEl = <HTMLInputElement>document.getElementById("name");
+    let name = nameEl.value;
+    let assetIdEl = <HTMLInputElement>document.getElementById("assetId");
+    let assetId = assetIdEl.value;
+    const url = "/otmmapi/v6/folders/"+assetId;
+    console.log(url);
+    const httpSessionId = this.sessionId.toString();
+    const headers = new HttpHeaders({
+      "X-Requested-By": httpSessionId,
+    })
+    const createFolderBody= {
+      "folder_resource": {
+          "folder": {
+              "name": name,
+              "container_type_id": "TRAINING.FOLDER.TYPE",
+              "security_policy_list": [
+                  {
+                      "id": 6
+                  }
+              ],
+              "metadata": {
+                  "metadata_element_list": [
+                      {
+                          "id": "TRAINING.FOLDER.DESCRIPTION",
+                          "name": "Training Folder Description",
+                          "type": "com.artesia.metadata.MetadataField",
+                          "value": {
+                              "value": {
+                                  "type": "string",
+                                  "value": "training folder value added from postman"
+                              }
+                          }
+                      },
+                      {
+                          "id": "TRAINING.FOLDER.LABEL",
+                          "name": "Training Folder Label",
+                          "type": "com.artesia.metadata.MetadataField",
+                          "value": {
+                              "value": {
+                                  "type": "string",
+                                  "value": "training folder value added from postman"
+                              }
+                          }
+                      }
+                  ]
+              },
+              "metadata_model_id": "TRAINING.FOLDER.MODEL"
+          }
+      }
+  }
+    this.httpClient.post(url,createFolderBody,{headers:headers}).subscribe((data)=>{
+      alert("folder added");
+    });
+  }
+
+  handleFileInput = (event: any) => {
+   if(event.target != null){
+     this.uploadedFile = event.target.files[0]
+     this.filename = this.uploadedFile.name;
+     this.filetype = this.uploadedFile.type;
+     console.log(this.uploadedFile);
+   }
+  }
+
+  createAsset = () => {
+    let parentFolderIdEl = <HTMLInputElement>document.getElementById("parentFolderId");
+    let parentFolderId = parentFolderIdEl.value;
+    const asset_representation=JSON.stringify({
+      "asset_resource": {
+        "asset": {
+          "metadata": {
+            "metadata_element_list": [{
+              "id": "BOOK_NAME_FIELD",
+              "name": "Book Name",
+              "type": "com.artesia.metadata.MetadataField",
+              "value": {
+                "value": {
+                  "value": "Pride and Prejudice",
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "id":"101",
+              "name":"First Name",
+              "type":"com.artesia.metadata.MetadataTableField",
+              "value": {
+                "value":{
+                  "type":"string",
+                  "value":"manikanta"
+                }
+              }
+            },{
+              "id":"102",
+              "name":"Last Name",
+              "type":"com.artesia.metadata.MetadataTableField",
+              "value": {
+                "value":{
+                  "type":"string",
+                  "value":"Jakkamsetti"
+                }
+              }
+            },
+            {
+              "id":"103",
+              "name":"Department",
+              "type":"com.artesia.metadata.MetadataTableField",
+              
+              "value": {
+                "domain_value" : "true",
+                "value":{
+                  "type":"string",
+                  "value":"2"
+                }
+              }
+            }]
+          },
+          "metadata_model_id": "BOOK_MODEL",
+          "security_policy_list": [{
+            "id": 6
+          }]
+        }
+      }
+    })
+    const manifest = JSON.stringify({
+      "upload_manifest": {
+          "master_files": [
+              {
+                  "file": {
+                      "file_name": this.filename,
+                      "file_type": this.filetype
+                  }
+              }
+          ]
+      }
+  })
+  var formData: any = new FormData();
+    formData.append('asset_representation', asset_representation);
+    formData.append(
+      'import_template_id',
+      '0b1a0a52043170dceed93a68b8307527c06989a2'
+    );
+    formData.append(
+      'parent_folder_id',
+      parentFolderId
+    );
+    formData.append('files', this.uploadedFile);
+    formData.append('manifest', manifest);
+    const httpSessionId = this.sessionId.toString();
+    const headers = new HttpHeaders({
+      "X-Requested-By": httpSessionId,
+    })
+    const url="otmmapi/v6/assets";
+    this.httpClient.post(url,formData,{headers: headers}).subscribe((data) => alert("image added successfully"));
+  }
+
+  
 }

@@ -1,9 +1,9 @@
 {
-    "/api": {
-        "target": "http://training-otmm.acheron-tech.com:11090",
+    "/otmmapi/*": {
+        "target": "http://training-otmm.acheron-tech.com:11090/otmmapi/",
         "secure": false,
         "pathRewrite": {
-            "^/api": ""
+            "^/otmmapi": ""
         }
     }
 }

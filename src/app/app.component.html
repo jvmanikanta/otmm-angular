@@ -1,16 +1,63 @@
 <div>
-    <h1>Enter Query Parameters</h1>
-    <div style="margin: 10px;">
-        <label for="keyword" style="margin-right: 10px;">Enter Keyword</label>
-        <input type="text" id="keyword" placeholder="keyword">
-    </div>
     <div>
-        <label for="scope_id" style="margin-right: 10px;">Select keword_scope_id</label>
-        <select name="keyword_scope_id" id="scope_id">
-      <option value=1>1</option>
-      <option value=2>2</option>
-      <option value=3>3</option>
+        <h1>Enter Query Parameters</h1>
+        <div style="margin: 10px;">
+            <label for="keyword" style="margin-right: 10px;">Enter Keyword</label>
+            <input type="text" id="keyword" placeholder="keyword">
+        </div>
+        <div>
+            <label for="scope_id" style="margin-right: 10px;">Select keword_scope_id</label>
+            <select name="keyword_scope_id" id="scope_id">
+      <option value=1>Metadata</option>
+      <option value=2>Content</option>
+      <option value=3>Metadata&Content</option>
     </select>
+        </div>
+        <button (click)="OnSearch()">Search</button>
     </div>
-    <button (click)="OnSearch()">Search</button>
+    <div *ngIf="assetsList">
+        <div style="display: flex; flex-wrap: wrap;">
+            <div *ngFor="let asset of assetsList">
+                <div *ngIf="asset.type=='com.artesia.container.Container'" style="margin: 10px; background-color: gray; padding: 10px; border-radius: 12px;">
+                    <img style="height:200px;" src="https://cdn4.iconfinder.com/data/icons/small-n-flat/24/folder-blue-512.png" />
+                    <h4 style="text-align: center; color: ivory;">{{asset.name}}</h4>
+                    <h4 style="text-align: center; color: ivory;">type:Container</h4>
+                    <button type='button' ngxClipboard [cbContent]="asset.asset_id">copy asset id</button>
+                </div>
+                <div *ngIf="asset.type!='com.artesia.container.Container'" style="margin: 10px; background-color: gray; padding: 10px; border-radius: 12px;">
+                    <img style="height:200px; " [src]="asset.rendition_content.thumbnail_content.url " alt="Preview " />
+                    <h4 style="text-align: center; color: ivory;">{{asset.name}}</h4>
+                    <h4 style="text-align: center; color: ivory;">{{asset.mime_type}}</h4>
+                    <button type='button' ngxClipboard [cbContent]="asset.asset_id">copy asset id</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <h1>Create a Folder/asset</h1>
+    <div>
+        <button style="margin: 10px;" (click)="folder()">Folder</button>
+        <button style="margin: 10px;" (click)="asset()">Asset</button>
+    </div>
+    <div *ngIf="isFolderClicked">
+        <div style="margin: 10px;">
+            <label for="name" style="margin-right: 10px;">Enter name</label>
+            <input type="text" id="name" placeholder="name">
+        </div>
+        <div style="margin: 10px;">
+            <label for="assetId" style="margin-right: 10px;">Enter Parent Folder Id</label>
+            <input type="text" id="assetId" placeholder="assetId">
+        </div>
+        <button (click)="createFolder()">Create Folder</button>
+    </div>
+    <div *ngIf="isAssetClicked">
+        <div>
+            <label for="parentFolderId">Parent Folder Id</label>
+            <input type="text" id="parentFolderId" />
+        </div>
+        <label for="file">Choose File</label>
+        <input type="file" id="file" (change)="handleFileInput($event)">
+        <button (click)="createAsset()">Create Asset</button>
+    </div>
 </div>
